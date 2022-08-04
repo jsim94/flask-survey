@@ -1,6 +1,6 @@
 function checkCompleteness(e) {
   // check if options have been selected
-  if ($("input[name=yes_or_no]:checked").length < 1) {
+  if ($("input[name=options]:checked").length < 1) {
     e.preventDefault();
   }
 }

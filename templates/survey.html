@@ -6,15 +6,15 @@
 <h2>{{survey.title}}</h2><br>
 {{survey.questions[q].question}}
 
-<form action="/answer/{{id}}/{{q}}" method="post">
+<form action="/answer/{{q}}" method="post">
   <div class="form-check">
-    <input class="form-check-input" type="radio" name="yes_or_no" value="yes" id="yes">
+    <input class="form-check-input" type="radio" name="options" value="yes" id="yes">
     <label class="form-check-label" for="yes">
       Yes
     </label>
   </div>
   <div class="form-check">
-    <input class="form-check-input" type="radio" name="yes_or_no" value="no" id="no">
+    <input class="form-check-input" type="radio" name="options" value="no" id="no">
     <label class="form-check-label" for="no">
       No
     </label>
