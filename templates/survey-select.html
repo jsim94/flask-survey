@@ -2,17 +2,22 @@
 {% block title %}Select a survey{% endblock %}
 
 {% block content %}
+
 {% for id, survey in surveys.items() %}
 <form action="/questions/0" method="post" class="container-sm row mb-4 align-items-center">
-  <div class="col col-md-4">
+  <div class="col col-md-4 col-12">
     <h2>{{survey.title}}</h2>
     {{survey.instructions}}
   </div>
   <div class="col col-2">
-    <input type="hidden" name="storyid" value="{{survey.id}}">
-    <input class="btn btn-primary btn-sm" type="submit" value="Start Survey">
+    <input type="hidden" name="survey_id" value="{{survey.id}}">
+    {% if survey.id in session['survey_results'] %}
+    <input class="btn btn-primary btn-sm disabled mt-2" type="submit" value="Survey Complete">
+    {% else %}
+    <input class="btn btn-primary btn-sm mt-2" type="submit" value="Start Survey">
+    {% endif %}
   </div>
 </form>
-
 {% endfor %}
+
 {% endblock %}

@@ -1,4 +1,5 @@
-from flask import Flask, redirect, request, render_template, flash, session
+from sqlite3 import Cursor
+from flask import Flask, Response, redirect, request, render_template, flash, session
 from flask_debugtoolbar import DebugToolbarExtension
 from surveys import surveys as survey_list
 
@@ -12,37 +13,53 @@ debug = DebugToolbarExtension()
 RESPONSES = 'responses'
 CURRENT_QUESTION = 'current_question'
 CURRENT_SURVEY = 'current_survey'
-COMPLETED_SURVEYS = 'completed_surveys'
+SURVEY_RESULTS = 'survey_results'
+
+
+@app.route('/clear')
+def clear_session():
+    session.clear()
+    print('SESSION CLEARED!')
+    return redirect('/')
 
 
 @app.route('/')
 def home():
-    session.clear()
+
+    if not SURVEY_RESULTS in session:
+        session[SURVEY_RESULTS] = {}
     session[CURRENT_QUESTION] = 0
+    session.pop(RESPONSES, None)
+    session.pop(CURRENT_SURVEY, None)
+    session.modified = True
 
     return render_template('survey-select.html', surveys=survey_list)
 
 
-@app.route('/questions/<qid>', methods=['GET', 'POST'])
+@ app.route('/questions/<qid>', methods=['GET', 'POST'])
 def questions(qid):
 
     if request.method == 'POST':
-        story_id = request.form['storyid']
-        session[RESPONSES] = [None] * len(survey_list[story_id].questions)
-        session[CURRENT_SURVEY] = story_id
-        session[CURRENT_QUESTION] = 0
+        survey_id = request.form.get('survey_id')
+
+        # DEPRECATED - App now disables button if completed
+        # if survey_id in session.get(SURVEY_RESULTS):
+        #    print("You've completed this one already!")
+        #    return redirect('/')
+
+        session[RESPONSES] = [None] * len(survey_list[survey_id].questions)
+        session[CURRENT_SURVEY] = survey_id
+        if session[CURRENT_QUESTION] is None:
+            return redirect('/')
+
         return redirect('/questions/0')
 
-    # if survey in session[COMPLETED_SURVEYS]:
-    #     print("You've completed this one already!")
+    if not CURRENT_SURVEY in session or CURRENT_SURVEY in session[SURVEY_RESULTS]:
+        return redirect('/')
 
-    # if not check_valid_question(survey, int(qid)):
-    #     flash("Tsk, tsk. Answer THIS one please.")
-    #     return redirect(f'/questions/{survey}/{CURRENT_QUESTION}')
-
-    # if session[CURRENT_QUESTION] >= len(survey_list[survey].questions):
-    #     CURRENT_QUESTION = 0
-    #     return redirect('/complete')
+    if int(qid) >= len(survey_list[session[CURRENT_SURVEY]].questions):
+        flash("Tsk, tsk. Answer THIS one please.")
+        return redirect(f'/questions/{session[CURRENT_QUESTION]}')
 
     return render_template('survey.html', survey=survey_list[session[CURRENT_SURVEY]], q=session[CURRENT_QUESTION])
 
@@ -50,28 +67,35 @@ def questions(qid):
 @ app.route('/answer/<qid>', methods=['POST'])
 def answer(qid):
 
-    # if not check_valid_question(survey, int(qid)):
-    #     flash("Tsk, tsk. Answer THIS one please.")
-    #     return redirect(f'/questions/{survey}/{CURRENT_QUESTION}')
-
     answer = request.form.get('options')
-    record_answer(qid, answer)
+    comment = request.form.get('comment_box')
+    record_answer(int(qid), answer, comment)
 
-    CURRENT_QUESTION += 1
-    return redirect(f'/questions/{survey}/{CURRENT_QUESTION}')
+    try:
+        session[CURRENT_QUESTION] = session[RESPONSES].index(None)
+    except:
+        return redirect('/complete')
+
+    return redirect(f'/questions/{session[CURRENT_QUESTION]}')
 
 
 @ app.route('/complete')
 def complete():
+    try:
+        session[SURVEY_RESULTS][session[CURRENT_SURVEY]] = session[RESPONSES]
+    except:
+        redirect('/')
+
+    session.pop(CURRENT_QUESTION, None)
+    session.pop(CURRENT_SURVEY, None)
     return render_template('complete.html')
 
 
-def record_answer(qid, answer):
-    RESPONSES.append(answer)
-    return
+@app.route('/show-results')
+def show_results():
+    return render_template('view-results.html', survey_list=survey_list)
 
 
-def check_valid_question(qid):
-    global CURRENT_QUESTION
-    if q == CURRENT_QUESTION:
-        return True
+def record_answer(qid, answer, comment):
+    session[RESPONSES][qid] = (answer, comment)
+    session.modified = True

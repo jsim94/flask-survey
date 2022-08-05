@@ -4,21 +4,23 @@
 {% block content %}
 
 <h2>{{survey.title}}</h2><br>
+
 {{survey.questions[q].question}}
 
 <form action="/answer/{{q}}" method="post">
+  {% for choice in survey.questions[q].choices %}
   <div class="form-check">
-    <input class="form-check-input" type="radio" name="options" value="yes" id="yes">
-    <label class="form-check-label" for="yes">
-      Yes
+    <input class="form-check-input" type="radio" name="options" value="{{choice}}" id="{{choice}}">
+    <label class="form-check-label" for="{{choice}}">
+      {{choice}}
     </label>
   </div>
-  <div class="form-check">
-    <input class="form-check-input" type="radio" name="options" value="no" id="no">
-    <label class="form-check-label" for="no">
-      No
-    </label>
-  </div>
+  {% endfor %}
+
+  {% if survey.questions[q].allow_text %}
+  <label for="comment-box">Additional Comments</label>
+  <textarea class="form-control" id="comment-box" name="comment_box" rows="3"></textarea>
+  {% endif %}
   <input class="btn btn-primary btn-sm" type="submit" value="Submit">
 </form>
 {% for msg in get_flashed_messages() %}

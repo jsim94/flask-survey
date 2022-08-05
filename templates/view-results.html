@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Viewing Results{% endblock %}
+
+{% block content %}
+
+<h2>Here are your results</h2>
+
+
+<ul>
+  {% for id, results in session['survey_results'].items() %}
+  <li>
+    <h3>{{survey_list[id].title}}</h3>
+    <ul>
+      {% for question in survey_list[id].questions %}
+      <li class="mb-2">
+        <h6 class="d-inline">{{question.question}}</h6>
+        &emsp; {{session['survey_results'][id][loop.index0][0]}}
+        {% if question.allow_text %}
+        <p>Comment: {{session['survey_results'][id][loop.index0][1]}}</p>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}
