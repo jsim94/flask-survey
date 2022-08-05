@@ -1,5 +1,4 @@
-from sqlite3 import Cursor
-from flask import Flask, Response, redirect, request, render_template, flash, session
+from flask import Flask, redirect, request, render_template, flash, session
 from flask_debugtoolbar import DebugToolbarExtension
 from surveys import surveys as survey_list
 
